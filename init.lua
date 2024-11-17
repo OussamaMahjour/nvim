@@ -271,6 +271,18 @@ require('lazy').setup({
   -- after the plugin has been loaded:
   --  config = function() ... end
 
+  {
+    'nvim-lualine/lualine.nvim',
+    dependencies = { 'nvim-tree/nvim-web-devicons' },
+    config = function()
+      require('lualine').setup {
+        options = {
+          theme = 'ayu_mirage',
+        },
+      }
+    end,
+  },
+
   --NOTE:Nvim Java
 
   {
