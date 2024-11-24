@@ -89,7 +89,7 @@ P.S. You can delete this when you're done too. It's your config now! :)
 --  NOTE: Must happen before plugins are loaded (otherwise wrong leader will be used)
 vim.g.mapleader = ' '
 vim.g.maplocalleader = ' '
-
+vim.opt.termguicolors = true
 -- Set to true if you have a Nerd Font installed and selected in the terminal
 vim.g.have_nerd_font = false
 
@@ -160,6 +160,9 @@ vim.opt.scrolloff = 10
 -- [[ Basic Keymaps ]]
 --  See `:help vim.keymap.set()`
 vim.keymap.set('n', '<leader>pv', vim.cmd.Ex)
+vim.keymap.set('n', '<leader>k', '<cmd>bd<CR>')
+vim.keymap.set('n', '<leader>n', '<cmd>bnext<CR>')
+
 -- Clear highlights on search when pressing <Esc> in normal mode
 --  See `:help hlsearch`
 vim.keymap.set('n', '<Esc>', '<cmd>nohlsearch<CR>')
@@ -192,7 +195,12 @@ vim.keymap.set('n', '<C-k>', '<C-w><C-k>', { desc = 'Move focus to the upper win
 
 -- [[ Basic Autocommands ]]
 --  See `:help lua-guide-autocommands`
-
+vim.api.nvim_create_autocmd('VimEnter', {
+  callback = function()
+    local cwd = vim.fn.fnamemodify(vim.fn.getcwd(), ':p')
+    vim.cmd('lcd ' .. cwd)
+  end,
+})
 -- Highlight when yanking (copying) text
 --  Try it with `yap` in normal mode
 --  See `:help vim.highlight.on_yank()`
@@ -282,9 +290,61 @@ require('lazy').setup({
       }
     end,
   },
+  {
+    'akinsho/bufferline.nvim',
+    version = '*',
+    dependencies = 'nvim-tree/nvim-web-devicons',
+    config = function()
+      require('bufferline').setup {}
+    end,
+  },
 
-  --NOTE:Nvim Java
-
+  {
+    'fbuchlak/telescope-directory.nvim',
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'nvim-telescope/telescope.nvim',
+    },
+    opts = {},
+    config = function(_, opts)
+      require('telescope-directory').setup(opts)
+    end,
+    keys = {
+      {
+        '<Leader>fp',
+        function()
+          require('telescope-directory').directory {
+            feature = 'live_grep',
+          }
+        end,
+        desc = 'Select directory for Live Grep',
+      },
+      {
+        '<Leader>fe',
+        '<CMD>Telescope directory find_files<CR>',
+        desc = 'Select directory for Find Files',
+      },
+    },
+  },
+  --NOTE:Plugins-inserting
+  {
+    'rachartier/tiny-inline-diagnostic.nvim',
+    event = 'VeryLazy', -- Or `LspAttach`
+    priority = 1000, -- needs to be loaded in first
+    config = function()
+      require('tiny-inline-diagnostic').setup()
+    end,
+  },
+  {
+    'oclay1st/maven.nvim',
+    cmd = { 'Maven', 'MavenInit', 'MavenExec' },
+    dependencies = {
+      'nvim-lua/plenary.nvim',
+      'MunifTanjim/nui.nvim',
+    },
+    opts = {}, -- options, see default configuration
+    keys = { { '<Leader>M', '<cmd>Maven<cr>', desc = 'Maven' } },
+  },
   {
     'nvim-java/nvim-java',
     keys = {
@@ -302,7 +362,24 @@ require('lazy').setup({
       },
     },
   },
-
+  {
+    'natecraddock/workspaces.nvim',
+    config = function()
+      require('workspaces').setup {}
+    end,
+    keys = {
+      {
+        '<leader>lw',
+        function()
+          require('workspaces').list()
+        end,
+      },
+      {
+        '<leader><leader>w',
+        '<cmd>Telescope workspaces<cr>',
+      },
+    },
+  },
   { -- Useful plugin to show you pending keybinds.
     'folke/which-key.nvim',
     event = 'VimEnter', -- Sets the loading event to 'VimEnter'
@@ -441,7 +518,6 @@ require('lazy').setup({
       vim.keymap.set('n', '<leader>fd', builtin.diagnostics, { desc = '[F]ind [D]iagnostics' })
       vim.keymap.set('n', '<leader>fr', builtin.resume, { desc = '[F]ind [R]esume' })
       vim.keymap.set('n', '<leader>f.', builtin.oldfiles, { desc = '[F]ind Recent Files ("." for repeat)' })
-      vim.keymap.set('n', '<leader><leader>', builtin.buffers, { desc = '[ ] Find existing buffers' })
 
       -- Slightly advanced example of overriding default behavior and theme
       vim.keymap.set('n', '<leader>/', function()
@@ -874,6 +950,14 @@ require('lazy').setup({
     --
     -- If you want to see what colorschemes are already installed, you can use `:Telescope colorscheme`.
     'folke/tokyonight.nvim',
+
+    opts = {
+      transparent = true,
+      styles = {
+        sidebars = 'transparent',
+        floats = 'transparent',
+      },
+    },
     priority = 1000, -- Make sure to load this before all the other start plugins.
     init = function()
       -- Load the colorscheme here.
